@@ -1,66 +1,111 @@
 /* Example 5:  simplifying calculations */
-/* What we want:  number of orders with discounts and total savings by month */
-
-/* Check relative performance of each.  Be sure to turn on execution plans (Ctrl+M). */
-SET STATISTICS IO ON;
-SET STATISTICS TIME ON;
-GO
-
-
-/* Method 1:  CTE with duplication of calculation. */
-WITH orders AS
+--Create the fact table
+CREATE TABLE #Fact
 (
-	SELECT
-		DATEADD(MM, DATEDIFF(MM, 0, soh.OrderDate), 0) as OrderMonth,
-		soh.SalesOrderID,
-		SUM(sod.UnitPrice * sod.OrderQty * sod.UnitPriceDiscount) as TotalDiscount
-	FROM
-		Sales.SalesOrderHeader soh
-		INNER JOIN Sales.SalesOrderDetail sod ON soh.SalesOrderID = sod.SalesOrderID
-	WHERE
-		sod.UnitPriceDiscount > 0
-		AND soh.OrderDate > '2006-01-01'
-	GROUP BY
-		DATEADD(MM, DATEDIFF(MM, 0, soh.OrderDate), 0),
-		soh.SalesOrderID
+    ReportDate INT NOT NULL,
+    UseSource1 BIT NOT NULL,
+    ClickSource1 INT NULL,
+    ClickSource2 INT NULL,
+    CostSource1 DECIMAL(23, 4) NULL,
+    CostSource2 DECIMAL(23, 4) NULL,
+    OrderCount INT NULL,
+    OrderRevenue DECIMAL(23, 4) NULL,
+    ProductCost DECIMAL(23, 4) NULL
+);
+ 
+INSERT INTO dbo.#Fact
+(
+    ReportDate,
+    UseSource1,
+    ClickSource1,
+    ClickSource2,
+    CostSource1,
+    CostSource2,
+    OrderCount,
+    OrderRevenue,
+    ProductCost
 )
-SELECT
-	OrderMonth,
-	COUNT(*) as NumberOfOrders,
-	SUM(TotalDiscount) as TotalDiscount
-FROM
-	orders
-GROUP BY
-	OrderMonth
-ORDER BY
-	OrderMonth;
+VALUES
+(20150101, 1, 25, NULL, 285.86, NULL, 18, 1349.56, 187.39),
+(20150102, 0, 25, 6, 285.86, 8.36, 3, 98.72, 75.14),
+(20150103, 1, 16, NULL, 28.38, NULL, 1, 9.99, 5.42),
+(20150104, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(20150105, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(20150106, 1, 108, NULL, 39.80, NULL, 12, 2475.02, 918.60),
+(20150107, 0, NULL, 85, NULL, 85.00, 67, 428.77, 206.13);
 
-
-/* Method 2:  CROSS APPLY, with a single query and no definition duplication. */
+--Query the fact table
+--Nested functions and calculations can be hard to read, right?
 SELECT
-	mon.OrderMonth,
-	COUNT(det.TotalDiscount) as NumberOfOrders,
-	SUM(det.TotalDiscount) as TotalDiscount
-FROM
-	Sales.SalesOrderHeader soh
-	CROSS APPLY
-	(
-		SELECT DATEADD(MM, DATEDIFF(MM, 0, soh.OrderDate), 0) as OrderMonth
-	) mon
-	CROSS APPLY
-	(
-		SELECT
-			SUM(sod.UnitPrice * sod.OrderQty * sod.UnitPriceDiscount) as TotalDiscount
-		FROM
-			Sales.SalesOrderDetail sod 
-		WHERE
-			sod.SalesOrderID = soh.SalesOrderID
-			AND sod.UnitPriceDiscount > 0
-	) det
+    SUM(CASE WHEN f.UseSource1 = 1 THEN ISNULL(f.ClickSource1, 0) ELSE ISNULL(f.ClickSource2, 0) END) AS Clicks,
+    SUM(ISNULL(f.OrderCount, 0)) AS OrderCount,
+    SUM(ISNULL(f.OrderRevenue, 0)) AS OrderRevenue,
+    SUM(ISNULL(f.ProductCost, 0)) AS ProductCost,
+    SUM(CASE WHEN f.UseSource1 = 1 THEN ISNULL(f.CostSource1, 0) ELSE ISNULL(f.CostSource2, 0) END) AS Cost,
+    CAST
+    (
+        CASE
+            WHEN SUM(CASE WHEN f.UseSource1 = 1 THEN ISNULL(f.ClickSource1, 0) ELSE ISNULL(f.ClickSource2, 0) END) = 0 THEN 0.0
+            WHEN SUM(ISNULL(f.OrderCount, 0)) = 0 THEN 0.0
+            WHEN SUM(ISNULL(f.OrderCount, 0)) > SUM(CASE WHEN f.UseSource1 = 1 THEN ISNULL(f.ClickSource1, 0) ELSE ISNULL(f.ClickSource2, 0) END) THEN 1.0
+            ELSE 1.0 * SUM(ISNULL(f.OrderCount, 0)) / SUM(CASE WHEN f.UseSource1 = 1 THEN ISNULL(f.ClickSource1, 0) ELSE ISNULL(f.ClickSource2, 0) END)
+        END AS DECIMAL(19, 4)
+    ) AS ConversionRate,
+    SUM(ISNULL(f.OrderRevenue, 0) - (ISNULL(f.ProductCost, 0) + CASE WHEN f.UseSource1 = 1 THEN ISNULL(f.CostSource1, 0) ELSE ISNULL(f.CostSource2, 0) END)) AS NetMargin,
+    CASE
+        WHEN SUM(CASE WHEN f.UseSource1 = 1 THEN ISNULL(f.CostSource1, 0) ELSE ISNULL(f.CostSource2, 0) END) = 0 THEN
+            CASE
+                WHEN SUM(ISNULL(f.OrderRevenue, 0)) = 0 THEN 0.0
+                ELSE 1.0
+            END
+        ELSE SUM(ISNULL(f.OrderRevenue, 0)) / SUM(CASE WHEN f.UseSource1 = 1 THEN ISNULL(f.CostSource1, 0) ELSE ISNULL(f.CostSource2, 0) END)
+    END AS ReturnOnAdSpend
+FROM dbo.#Fact f
 WHERE
-	soh.OrderDate > '2006-01-01'
-	AND det.TotalDiscount IS NOT NULL
-GROUP BY
-	mon.OrderMonth
-ORDER BY
-	mon.OrderMonth;
+    f.ReportDate BETWEEN 20150101 AND 20150107;
+
+--APPLY helps us clean up function nesting
+SELECT
+    SUM(us1.Clicks) AS Clicks,
+    SUM(nonull.OrderCount) AS OrderCount,
+    SUM(nonull.OrderRevenue) AS OrderRevenue,
+    SUM(nonull.ProductCost) AS ProductCost,
+    SUM(us1.Cost) AS Cost,
+    CAST
+    (
+        CASE
+            WHEN SUM(us1.Clicks) = 0 THEN 0.0
+            WHEN SUM(nonull.OrderCount) = 0 THEN 0.0
+            WHEN SUM(nonull.OrderCount) > SUM(us1.Clicks) THEN 1.0
+            ELSE 1.0 * SUM(nonull.OrderCount) / SUM(us1.Clicks)
+        END AS DECIMAL(19, 4)
+    ) AS ConversionRate,
+    SUM(nonull.OrderRevenue - (nonull.ProductCost + us1.Cost)) AS NetMargin,
+    CASE
+        WHEN SUM(us1.Cost) = 0 THEN
+            CASE
+                WHEN SUM(nonull.OrderRevenue) = 0 THEN 0.0
+                ELSE 1.0
+            END
+        ELSE SUM(nonull.OrderRevenue) / SUM(us1.Cost)
+    END AS ReturnOnAdSpend
+FROM dbo.#Fact f
+    CROSS APPLY
+    (
+        SELECT
+            ISNULL(ClickSource1, 0) AS ClickSource1,
+            ISNULL(ClickSource2, 0) AS ClickSource2,
+            ISNULL(CostSource1, 0) AS CostSource1,
+            ISNULL(CostSource2, 0) AS CostSource2,
+            ISNULL(OrderCount, 0) AS OrderCount,
+            ISNULL(OrderRevenue, 0) AS OrderRevenue,
+            ISNULL(ProductCost, 0) AS ProductCost
+    ) nonull
+    OUTER APPLY
+    (
+        SELECT
+            CASE WHEN f.UseSource1 = 1 THEN nonull.ClickSource1 ELSE nonull.ClickSource2 END AS Clicks,
+            CASE WHEN f.UseSource1 = 1 THEN nonull.CostSource1 ELSE nonull.CostSource2 END AS Cost
+    ) us1
+WHERE
+    f.ReportDate BETWEEN 20150101 AND 20150107;
