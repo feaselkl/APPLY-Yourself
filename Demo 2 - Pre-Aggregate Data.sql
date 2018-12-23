@@ -10,13 +10,13 @@ SET STATISTICS IO ON
 SET STATISTICS TIME ON
 GO
 
-SELECT 
-	ps.Name,
+SELECT
+	pc.Name AS CategoryName,
+	ps.Name AS SubcategoryName,
 	p.ProductID,
 	p.Name,
 	COUNT(*) 
-FROM 
-	Production.ProductCategory pc 
+FROM Production.ProductCategory pc 
 	INNER JOIN Production.ProductSubcategory ps 
 		ON pc.ProductCategoryID = ps.ProductCategoryID 
 	INNER JOIN Production.Product p 
@@ -25,20 +25,21 @@ FROM
 		ON p.ProductID = sad.ProductID 
 WHERE 
 	p.Name='Water Bottle - 30 oz.' 
-GROUP BY 
+GROUP BY
+	pc.Name,
 	ps.Name,
 	p.ProductID,
 	p.Name 
 ORDER BY 
 	p.Name;
 
-SELECT 
-	ps.Name,
+SELECT
+	pc.Name AS CategoryName,
+	ps.Name AS SubcategoryName,
 	p.ProductID,
 	p.Name,
 	x.DetailCount
-FROM 
-	Production.ProductCategory pc
+FROM Production.ProductCategory pc
 	INNER JOIN Production.ProductSubcategory ps 
 		ON pc.ProductCategoryID = ps.ProductCategoryID
 	INNER JOIN Production.Product p 
@@ -47,8 +48,7 @@ FROM
 	(
 		SELECT 
 			COUNT(*) AS DetailCount
-		FROM 
-			Sales.SalesOrderDetailEnlarged sad
+		FROM Sales.SalesOrderDetailEnlarged sad
 		WHERE 
 			p.ProductID = sad.ProductID
 	) x

@@ -4,17 +4,15 @@
 --sys.dm_exec_connections gives basic session information
 SELECT
 	*
-FROM
-	sys.dm_exec_connections c
+FROM sys.dm_exec_connections c;
 
 SELECT
 	c.session_id,
 	c.connect_time,
 	c.num_reads,
 	c.num_writes,
-	t.*
-FROM
-	sys.dm_exec_connections c
+	t.text
+FROM sys.dm_exec_connections c
 	CROSS APPLY sys.dm_exec_sql_text(c.most_recent_sql_handle) t;
 
 /* What is the difference between cross apply and outer apply? */
@@ -25,11 +23,28 @@ SELECT
 	c.connect_time,
 	c.num_reads,
 	c.num_writes,
-	t.*
-FROM
-	sys.dm_exec_connections c
+	t.text
+FROM sys.dm_exec_connections c
 	OUTER APPLY sys.dm_exec_sql_text(
 					CASE 
 						WHEN c.session_id = 57 THEN NULL 
 						ELSE c.most_recent_sql_handle 
-					END) t;
+					END) t
+ORDER BY
+	c.session_id ASC;
+
+--Note that when running CROSS APPLY, your session no longer shows up.
+SELECT
+	c.session_id,
+	c.connect_time,
+	c.num_reads,
+	c.num_writes,
+	t.text
+FROM sys.dm_exec_connections c
+	CROSS APPLY sys.dm_exec_sql_text(
+					CASE 
+						WHEN c.session_id = 57 THEN NULL 
+						ELSE c.most_recent_sql_handle 
+					END) t
+ORDER BY
+	c.session_id ASC;
