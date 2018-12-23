@@ -45,7 +45,7 @@ At its simplest, `APPLY` is similar to `JOIN` but allows for a dependency betwee
 
 Microsoft introduced the `APPLY` operator in SQL Server 2005, with two variants:  `CROSS APPLY` and `OUTER APPLY`.  `CROSS APPLY` is semantically similar to `INNER JOIN`, whereas `OUTER APPLY` is akin to `OUTER JOIN`.
 
----?image=presentation/assets/background/2_2_motivation.jpg&size=cover&opacity=20
+---?image=presentation/assets/background/motivation.jpg&size=cover&opacity=20
 
 ### Motivation
 
@@ -130,8 +130,6 @@ We want to figure out how many times somebody has ordered a water bottle from th
 
 ---
 
-### The Classical Solution
-
 ```sql
 SELECT 
 	pc.Name AS CategoryName,
@@ -164,8 +162,6 @@ ORDER BY
 @[16-20](And include them in a GROUP BY clause.)
 
 ---
-
-### The APPLY Solution
 
 ```sql
 SELECT
