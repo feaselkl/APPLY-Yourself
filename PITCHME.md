@@ -322,7 +322,7 @@ This also worked for aggregation because we had one "parent" row.
 
 ---
 
-These are the conditions where index seeks are relatively more efficient than scans.
+"Relatively few interesting rows out of a huge total number of rows" is a verbose way of saying "when it is more efficient to seek rather than scan an index."  `APPLY` does much better when it makes sense to seek.
 
 ![A representation of when it is more efficient to seek or scan an index.](presentation/assets/image/IndexEfficiency.png)
 
@@ -396,8 +396,8 @@ FROM Sales.SalesOrderDetail sod
 	CROSS APPLY(SELECT c.CalculatedLineTotal - sod.LineTotal AS CalculatedDifference) cd
 WHERE sod.UnitPriceDiscount > 0;
 ```
-@[13](We define ListPrice.)
-@[3-4,14](We use ListPrice repeatedly.]
+@[13](We define ListPrice.  Note the lack of a FROM clause.)
+@[3-4,14](We use ListPrice repeatedly.)
 @[14](We define CalculatedLineTotal.)
 @[5,15](We use CalculatedLineTotal.)
 @[4](Of note, DiscountAmount is NOT the same, but in a complex calculation, that might be hard to see.)
