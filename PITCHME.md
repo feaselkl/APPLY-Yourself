@@ -57,7 +57,7 @@ Microsoft introduced the `APPLY` operator in SQL Server 2005, with two variants:
 
 ---
 
-@title[Joining to Functions]
+@title[Join to Functions]
 
 ## Agenda
 
@@ -293,9 +293,47 @@ Use either for small problem sets, but shift to `APPLY` as the sets get larger.
 
 ---
 
-### What Makes `APPLY` More Effiient?
+### When Is `APPLY` More Efficient?
 
-TODO:  fill out slides.
+**NOT ALWAYS!**
+
+`APPLY` runs once for each element in the "parent" (or left-hand) side.  Because each iteration is unique, you typically want to see `APPLY` generate nested loop joins.
+
+---
+
+### `APPLY` And Efficiency
+
+The ideal scenario for `APPLY` has:
+* Relatively few "parent" records
+* A **huge** number of "child" records
+* Relatively few interesting "child" records
+
+---
+
+In other words:
+
+![An efficient nested loop join brought about by the APPLY operator.](presentation/assets/image/TopN.png)
+
+---
+
+This also worked for aggregation because we had one "parent" row.
+
+![An efficient nested loop join brought about by the APPLY operator.](presentation/assets/image/NestedLoopJoin.png)
+
+---
+
+These are the conditions where index seeks are relatively more efficient than scans.
+
+![A representation of when it is more efficient to seek or scan an index.](presentation/assets/image/IndexEfficiency.png)
+
+---
+
+The `APPLY` operator will consequently perform poorly when:
+* Each "parent" row requires a table scan
+* The number of "parent" rows is huge
+* You need to retrieve almost every row from the "child" table
+
+Use other techniques in these cases or see if you can reduce data requirements.
 
 ---
 
@@ -314,6 +352,58 @@ TODO:  fill out slides.
 ### Simplify Calculations
 
 SQL Server calculations tend to be repetitious.  The `APPLY` operator can help us with that by feeding the columns from an earlier table or derived function into a later derived function.  In other words, named columns you create in one `APPLY` statement can be used in the next `APPLY` statement.
+
+---
+
+```sql
+SELECT
+	sod.SalesOrderID,
+	sod.OrderQty * sod.UnitPrice AS ListPrice,
+	sod.OrderQty * sod.UnitPrice * sod.UnitPriceDiscount AS DiscountAmount,
+	sod.OrderQty * sod.UnitPrice * (1 - sod.UnitPriceDiscount) AS CalculatedLineTotal,
+	sod.LineTotal,
+	sod.OrderQty * sod.UnitPrice * (1 - sod.UnitPriceDiscount) - sod.LineTotal AS CalculatedDifference,
+	CASE
+		WHEN ABS(sod.OrderQty * sod.UnitPrice * (1 - sod.UnitPriceDiscount) - sod.LineTotal) > 0.01 THEN 1
+		ELSE 0
+	END AS HasDifference
+FROM Sales.SalesOrderDetail sod
+WHERE sod.UnitPriceDiscount > 0;
+```
+@[3](We define ListPrice.)
+@[4-5,7,9](We use ListPrice repeatedly.  Wouldn't it be great to call "ListPrice" here?)
+@[5](We define CalculatedLineTotal.)
+@[7,9](We use CalculatedLineTotal a couple more times.)
+@[1-14](Likely using copy-paste here, which can lead to errors.)
+
+---
+
+```sql
+SELECT
+	sod.SalesOrderID,
+	lp.ListPrice,
+	lp.ListPrice * sod.UnitPriceDiscount AS DiscountAmount,
+	c.CalculatedLineTotal,
+	sod.LineTotal,
+	cd.CalculatedDifference,
+	CASE
+		WHEN ABS(cd.CalculatedDifference) > 0.01 THEN 1
+		ELSE 0
+	END AS HasDifference
+FROM Sales.SalesOrderDetail sod
+	CROSS APPLY(SELECT sod.OrderQty * sod.UnitPrice AS ListPrice) lp
+	CROSS APPLY(SELECT lp.ListPrice * (1 - sod.UnitPriceDiscount) AS CalculatedLineTotal) c
+	CROSS APPLY(SELECT c.CalculatedLineTotal - sod.LineTotal AS CalculatedDifference) cd
+WHERE sod.UnitPriceDiscount > 0;
+```
+@[13](We define ListPrice.)
+@[3-4,14](We use ListPrice repeatedly.]
+@[14](We define CalculatedLineTotal.)
+@[5,15](We use CalculatedLineTotal.)
+@[4](Of note, DiscountAmount is NOT the same, but in a complex calculation, that might be hard to see.)
+@[15](We define CalculatedDifference, one step further in the chain.)
+@[7,9](We use CalculatedDifference.)
+@[1-16](No calculations are repeated, so no copy-paste errors will happen.)
 
 ---?image=presentation/assets/background/demo.jpg&size=cover&opacity=20
 
