@@ -37,7 +37,7 @@
 </div>
 @snapend
 
----
+---?image=presentation/assets/background/traffic.jpg&size=cover&opacity=20
 
 ### The APPLY Operator
 
@@ -67,7 +67,7 @@ Microsoft introduced the `APPLY` operator in SQL Server 2005, with two variants:
 4. Get the top N for Each X
 5. Simplify Calculations
 
----
+---?image=presentation/assets/background/connections.jpg&size=cover&opacity=20
 
 ### Getting Session Info
 
@@ -103,7 +103,7 @@ FROM
 
 ### Demo Time
 
----
+---?image=presentation/assets/background/table-with-chalkboard.jpg&size=cover&opacity=20
 
 ### Lessons Learned
 
@@ -122,7 +122,7 @@ FROM
 4. Get the top N for Each X
 5. Simplify Calculations
 
----
+---?image=presentation/assets/background/water-bottle.jpg&size=cover&opacity=20
 
 ### The Problem Description
 
@@ -198,7 +198,7 @@ ORDER BY
 
 ### Demo Time
 
----
+---?image=presentation/assets/background/table-with-chalkboard.jpg&size=cover&opacity=20
 
 ### Lessons Learned
 
@@ -218,13 +218,13 @@ ORDER BY
 4. Get the top N for Each X
 5. Simplify Calculations
 
----
+---?image=presentation/assets/background/cash-register.jpg&size=cover&opacity=20
 
 ### The Problem Description
 
 We want to see each customer's latest order, PO numbers associated with those orders, and the total due on each order.
 
----
+---?image=presentation/assets/background/choices.jpg&size=cover&opacity=20
 
 There are three set-based options that we can use to perform this operation:
 
@@ -238,7 +238,7 @@ There are Row By Agonizing Row (RBAR) solutions available like using a cursor/WH
 
 ### Demo Time
 
----
+---?image=presentation/assets/background/table-with-chalkboard.jpg&size=cover&opacity=20
 
 ### Lessons Learned
 
@@ -261,7 +261,7 @@ With small data sets, pick the one you prefer most, as they all will perform wel
 5. Simplify Calculations
 
 
----
+---?image=presentation/assets/background/cash-register.jpg&size=cover&opacity=20
 
 ### The Problem Description
 
@@ -269,7 +269,7 @@ This is a generalization of the "specific child record" problem.
 
 We want to see the average, minimum, maximum, and total prices of each customer's last 5 orders.
 
----
+---?image=presentation/assets/background/choices.jpg&size=cover&opacity=20
 
 There are still three set-based options that we can use to perform this operation:
 
@@ -283,7 +283,7 @@ With that said, however, the correlated sub-query quickly becomes nasty to write
 
 ### Demo Time
 
----
+---?image=presentation/assets/background/table-with-chalkboard.jpg&size=cover&opacity=20
 
 ### Lessons Learned
 
@@ -291,7 +291,7 @@ Similar to the specific case, the `APPLY` version looks worse early on but scale
 
 Use either for small problem sets, but shift to `APPLY` as the sets get larger.
 
----
+---?image=presentation/assets/background/spiral-staircase.jpg&size=cover&opacity=20
 
 ### When Is `APPLY` More Efficient?
 
@@ -299,7 +299,7 @@ Use either for small problem sets, but shift to `APPLY` as the sets get larger.
 
 `APPLY` runs once for each element in the "parent" (or left-hand) side.  Because each iteration is unique, you typically want to see `APPLY` generate nested loop joins.
 
----
+---?image=presentation/assets/background/jump.jpg&size=cover&opacity=20
 
 ### `APPLY` And Efficiency
 
@@ -326,7 +326,7 @@ This also worked for aggregation because we had one "parent" row.
 
 ![A representation of when it is more efficient to seek or scan an index.](presentation/assets/image/IndexEfficiency.png)
 
----
+---?image=presentation/assets/background/surfer-crash.jpg&size=cover&opacity=20
 
 The `APPLY` operator will consequently perform poorly when:
 * Each "parent" row requires a table scan
@@ -347,7 +347,7 @@ Use other techniques in these cases or see if you can reduce data requirements.
 4. Get the top N for Each X
 5. **Simplify Calculations**
 
----
+---?image=presentation/assets/background/calculator.jpg&size=cover&opacity=20
 
 ### Simplify Calculations
 
@@ -409,7 +409,7 @@ WHERE sod.UnitPriceDiscount > 0;
 
 ### Demo Time
 
----
+---?image=presentation/assets/background/table-with-chalkboard.jpg&size=cover&opacity=20
 
 ### Lessons Learned
 
@@ -417,7 +417,7 @@ Similar to the specific case, the `APPLY` version looks worse early on but scale
 
 Use either for small problem sets, but shift to `APPLY` as the sets get larger.
 
----
+---?image=presentation/assets/background/wrapping-paper.jpg&size=cover&opacity=20
 
 ### Wrapping Up
 
