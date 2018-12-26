@@ -326,7 +326,7 @@ This also worked for aggregation because we had one "parent" row.
 
 ![A representation of when it is more efficient to seek or scan an index.](presentation/assets/image/IndexEfficiency.png)
 
----?image=presentation/assets/background/surfer-crash.jpg&size=cover&opacity=20
+---?image=presentation/assets/background/surfer-crash.jpg&size=cover&opacity=30
 
 The `APPLY` operator will consequently perform poorly when:
 * Each "parent" row requires a table scan
