@@ -142,7 +142,7 @@ FROM Production.ProductCategory pc
 		ON pc.ProductCategoryID = ps.ProductCategoryID 
 	INNER JOIN Production.Product p
 		ON ps.ProductSubcategoryID = p.ProductSubcategoryID 
-	LEFT OUTER JOIN Sales.SalesOrderDetail sad
+	INNER JOIN Sales.SalesOrderDetail sad
 		ON p.ProductID = sad.ProductID 
 WHERE 
 	p.Name='Water Bottle - 30 oz.' 
@@ -179,7 +179,7 @@ FROM Production.ProductCategory pc
 	(
 		SELECT 
 			COUNT(*) AS DetailCount
-		FROM Sales.SalesOrderDetailEnlarged sad
+		FROM Sales.SalesOrderDetail sad
 		WHERE 
 			p.ProductID = sad.ProductID
 	) x
