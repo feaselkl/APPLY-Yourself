@@ -1,0 +1,483 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Catallaxy Services | APPLY Yourself</title>
+
+		<link rel="stylesheet" href="../reveal.js/dist/reset.css">
+		<link rel="stylesheet" href="../reveal.js/dist/reveal.css">
+		<link rel="stylesheet" href="../reveal.js/dist/theme/black.css" id="theme">
+		<link rel="stylesheet" href="../WebsiteAssets/mods.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="../reveal.js/plugin/highlight/monokai.css" id="highlight-theme">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h2>APPLY Yourself</h2>
+					<h3>Using SQL Server's APPLY Operator</h3>
+					
+					<a href="https://www.catallaxyservices.com">Kevin Feasel</a> (<a href="https://twitter.com/feaselkl">@feaselkl</a>)<br />
+					<a href="https://csmore.info/on/apply">https://csmore.info/on/apply</a>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Who Am I?  What Am I Doing Here?</h3>
+					<div class="container">
+						<div class="col">
+							<table class="whoami">
+								<tr>
+									<td><a href="https://csmore.info"><img src="../WebsiteAssets/Logo.png" height="100" /></a></td>
+									<td nowrap><a href="https://csmore.info">Catallaxy Services</a></td>
+								</tr>
+								<tr>
+									<td><a href="https://curatedsql.com"><img src="../WebsiteAssets/CuratedSQLLogo.png" height="100" /></a></td>
+									<td nowrap><a href="https://curatedsql.com">Curated SQL</a></td>
+								</tr>
+								<tr>
+									<td><a href="https://www.apress.com/us/book/9781484254608"><img src="../WebsiteAssets/PolyBaseRevealed.png" height="120" /></a></td>
+									<td nowrap><a href="https://www.apress.com/us/book/9781484254608">PolyBase Revealed</a></td>
+								</tr>
+							</table>
+						</div>
+						<div class="col">
+							<a href="http://www.twitter.com/feaselkl"><img src="../WebsiteAssets/HeadShot.jpg" height="358" width="315" /></a>
+							<br />
+							<a href="http://www.twitter.com/feaselkl">@feaselkl</a>
+						</div>					
+					</div>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/traffic.jpg" data-background-opacity="0.4">
+					<h3>The APPLY Operator</h3>
+					
+					<p>At its simplest, <code>APPLY</code> is similar to <code>JOIN</code> but allows for a dependency between the data sets being merged together.</p>
+
+					<p>Microsoft introduced the <code>APPLY</code> operator in SQL Server 2005, with two variants:  <code>CROSS APPLY</code> and <code>OUTER APPLY</code>.  <code>CROSS APPLY</code> is semantically similar to <code>INNER JOIN</code>, whereas <code>OUTER APPLY</code> is akin to <code>OUTER JOIN</code>.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/motivation.jpg" data-background-opacity="0.4">
+					<h3>Motivation</h3>
+					
+					<blockquote cite="https://twitter.com/AdamMachanic/status/46265020090294272#">
+						&ldquo;If you don't understand the APPLY operator, your skills are somewhere around the 50th percentile at best.&rdquo; -- Adam Machanic
+					</blockquote>
+					
+					<p><code>APPLY</code> is not always the best solution, but solves a number of problems in an elegant manner.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li class="active">Join to Functions</li>
+						<li>Pre-Aggregate Data</li>
+						<li>Get a Specific Child Record</li>
+						<li>Get the top N for each X</li>
+						<li>Simplify Calculations</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/connections.jpg" data-background-opacity="0.4">
+					<h3>Getting Session Info</h3>
+					
+					<p>We can use <code>sys.dm_exec_connections</code> to get basic information for each session, but this doesn't give us query text.  There is a table-valued function named <code>sys.dm_exec_sql_text([handle] varbinary)</code> but we need to pass in the handle for each row in our connections DMV.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Getting Session Info</h3>
+					
+					<p>Unfortunately, you cannot use <code>INNER JOIN</code> to join to a function which expects a parameter.</p>
+					
+					<img src="presentation/assets/image/InnerJoinError.png" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>The Solution</h3>
+					
+					<pre><code data-line-numbers="|7-8|1-6" data-trim><script type="text/template">
+					SELECT
+						c.session_id,
+						c.connect_time,
+						c.num_reads,
+						c.num_writes,
+						T.text
+					FROM sys.dm_exec_connections c
+						CROSS APPLY sys.dm_exec_sql_text(c.most_recent_sql_handle) t;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+					<h3>Lessons Learned</h3>
+					
+					<ul>
+						<li>Use <code>APPLY</code> to execute table-valued functions as though they were tables.</li>
+						<li><code>OUTER APPLY</code> can show rows that <code>CROSS APPLY</code> would filter out.</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>Join to Functions</li>
+						<li class="active">Pre-Aggregate Data</li>
+						<li>Get a Specific Child Record</li>
+						<li>Get the top N for each X</li>
+						<li>Simplify Calculations</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/water-bottle.jpg" data-background-opacity="0.4">
+					<h3>The Problem Description</h3>
+					
+					<p>We want to figure out how many times somebody has ordered a water bottle from the Adventure Works store.  We'd also like to see which product category and subcategory this belongs to.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|7-13|14-15|1-6|6|1-5|16-20" data-trim><script type="text/template">
+					SELECT 
+						pc.Name AS CategoryName,
+						ps.Name AS SubcategoryName,
+						p.ProductID,
+						p.Name,
+						COUNT(*) AS NumberOfPurchases
+					FROM Production.ProductCategory pc 
+						INNER JOIN Production.ProductSubcategory ps
+							ON pc.ProductCategoryID = ps.ProductCategoryID 
+						INNER JOIN Production.Product p
+							ON ps.ProductSubcategoryID = p.ProductSubcategoryID 
+						INNER JOIN Sales.SalesOrderDetail sad
+							ON p.ProductID = sad.ProductID 
+					WHERE 
+						p.Name='Water Bottle - 30 oz.' 
+					GROUP BY 
+						pc.Name,
+						ps.Name,
+						p.ProductID,
+						p.Name 
+					ORDER BY 
+						p.Name;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|7-11|12-19|14-18|18|1-6" data-trim><script type="text/template">
+					SELECT
+						pc.Name AS CategoryName,
+						ps.Name AS SubcategoryName,
+						p.ProductID,
+						p.Name,
+						x.DetailCount
+					FROM Production.ProductCategory pc
+						INNER JOIN Production.ProductSubcategory ps 
+							ON pc.ProductCategoryID = ps.ProductCategoryID
+						INNER JOIN Production.Product p 
+							ON ps.ProductSubcategoryID = p.ProductSubcategoryID
+						CROSS APPLY 
+						(
+							SELECT 
+								COUNT(*) AS DetailCount
+							FROM Sales.SalesOrderDetail sad
+							WHERE 
+								p.ProductID = sad.ProductID
+						) x
+					WHERE 
+						p.Name = 'Water Bottle - 30 oz.'
+					ORDER BY 
+						p.Name;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+					<h3>Lessons Learned</h3>
+					
+					<ul>
+						<li>Use <code>APPLY</code> to return data from ad hoc (derived) functions.</li>
+						<li>We could also use other techniques to pre-aggregate, such as correlated sub-queries.</li>
+						<li><strong>IN THIS CASE</strong> <code>APPLY</code> worked better because early aggregation allowed us to reduce the number of rows going through a nested loop join.</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>Join to Functions</li>
+						<li>Pre-Aggregate Data</li>
+						<li class="active">Get a Specific Child Record</li>
+						<li>Get the top N for each X</li>
+						<li>Simplify Calculations</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/cash-register.jpg" data-background-opacity="0.4">
+					<h3>The Problem Description</h3>
+					
+					<p>We want to see each customer's latest order, PO numbers associated with those orders, and the total due on each order.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/choices.jpg" data-background-opacity="0.4">
+					<p>There are three set-based options that we can use to perform this operation:</p>
+					
+					<ul>
+						<li>Nested Sub-Query</li>
+						<li>Common Table Expression (CTE) with a window function</li>
+						<li>Derived function with <code>APPLY</code></li>
+					</ul>
+					
+					<p>There are Row By Agonizing Row (RBAR) solutions available like using a cursor/WHILE loop, but these will not perform well.  We might also put something together with temporary tables which could scale, but start with simple.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+					<h3>Lessons Learned</h3>
+					
+					<ul>
+						<li>The nested subquery tends to be inferior to the CTE and can be worse than <code>APPLY</code>.</li>
+						<li>The CTE solution is understandable but does not scale well.</li>
+						<li>The <code>APPLY</code>-based solution is inefficient for small loads but scales extremely well.</li>
+					</ul>
+					
+					<p>With small data sets, pick the one you prefer most, as they will all perform well enough.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>Join to Functions</li>
+						<li>Pre-Aggregate Data</li>
+						<li>Get a Specific Child Record</li>
+						<li class="active">Get the top N for each X</li>
+						<li>Simplify Calculations</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/cash-register.jpg" data-background-opacity="0.4">
+					<h3>The Problem Description</h3>
+					
+					<p>This is a generalization of the "specific child record" problem.</p>
+
+					<p>We want to see the average, minimum, maximum, and total prices of each customer's last 5 orders.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/choices.jpg" data-background-opacity="0.4">
+					<p>There are still three set-based options that we can use to perform this operation:</p>
+					
+					<ul>
+						<li>Nested Sub-Query</li>
+						<li>Common Table Expression (CTE) with a window function</li>
+						<li>Derived function with <code>APPLY</code></li>
+					</ul>
+					
+					<p>With that said, however, the nested sub-query quickly becomes nasty to write, and we already know from the prior example that it doesn't scale well.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+					<h3>Lessons Learned</h3>
+					
+					<p>Similar to the specific case, the <code>APPLY</code> version looks worse early on but scales <strong>much</strong> better.</p>
+
+					<p>Use either for small problem sets, but shift to <code>APPLY</code> as the sets get larger.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/spiral-staircase.jpg" data-background-opacity="0.4">
+					<h3>When is <code>APPLY</code> More Efficient?</h3>
+					
+					<p><strong>NOT ALWAYS!</strong></p>
+					
+					<p><code>APPLY</code> runs once for each element in the "parent" (or left-hand) side.  Because each iteration is unique, you typically want to see <code>APPLY</code> generate nested loop joins.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/jump.jpg" data-background-opacity="0.4">
+					<h3><code>APPLY</code> and Efficiency</h3>
+					
+					<p>The ideal scenario for <code>APPLY</code> has:</p>
+					<ul>
+						<li>Relatively few "parent" records</li>
+						<li>A <strong>huge</strong> number of "child" records</li>
+						<li>Relatively few interesting "child" records</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<p>In other words:</p>
+					<img src="presentation/assets/image/TopN.png" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<p>This also worked for aggregation because we had one "parent" row.</p>
+					<img src="presentation/assets/image/NestedLoopJoin.png" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<p>"Relatively few interesting rows out of a huge total number of rows" is a verbose way of saying "when it is more efficient to seek rather than scan an index."  <code>APPLY</code> does much better when it makes sense to seek.</p>
+					<img src="presentation/assets/image/IndexEfficiency.png" />
+				</section>
+				
+				<section data-background-image="presentation/assets/background/surfer-crash.jpg" data-background-opacity="0.4">
+					<p>The <code>APPLY</code> operator will consequently perform poorly when:</p>
+					
+					<ul>
+						<li>Each "parent" row requires a table scan</li>
+						<li>The number of "parent" rows is huge</li>
+						<li>You need to retrieve almost every row from the "child" table</li>
+					</ul>
+					
+					<p>Use other techniques in these cases or see if you can reduce data requirements.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>Join to Functions</li>
+						<li>Pre-Aggregate Data</li>
+						<li>Get a Specific Child Record</li>
+						<li>Get the top N for each X</li>
+						<li class="active">Simplify Calculations</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/calculator.jpg" data-background-opacity="0.4">
+					<h3>Simplify Calculations</h3>
+					
+					<p>SQL Server calculations tend to be repetitious.  The <code>APPLY</code> operator can help us with that by feeding the columns from an earlier table or derived function into a later derived function.  In other words, named columns you create in one <code>APPLY</code> statement can be used in the next <code>APPLY</code> statement.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|3|4-5,7,9|5|7,9|1-14" data-trim><script type="text/template">
+					SELECT
+						sod.SalesOrderID,
+						sod.OrderQty * sod.UnitPrice AS ListPrice,
+						sod.OrderQty * sod.UnitPrice * sod.UnitPriceDiscount AS DiscountAmount,
+						sod.OrderQty * sod.UnitPrice * (1 - sod.UnitPriceDiscount) AS CalculatedLineTotal,
+						sod.LineTotal,
+						sod.OrderQty * sod.UnitPrice * (1 - sod.UnitPriceDiscount) - sod.LineTotal AS CalculatedDifference,
+						CASE
+							WHEN ABS(sod.OrderQty * sod.UnitPrice * (1 - sod.UnitPriceDiscount) - sod.LineTotal) > 0.01 THEN 1
+							ELSE 0
+						END AS HasDifference
+					FROM Sales.SalesOrderDetail sod
+					WHERE sod.UnitPriceDiscount > 0;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|13|3-4,14|14|5,15|4|15|7,9|1-16" data-trim><script type="text/template">
+					SELECT
+						sod.SalesOrderID,
+						lp.ListPrice,
+						lp.ListPrice * sod.UnitPriceDiscount AS DiscountAmount,
+						c.CalculatedLineTotal,
+						sod.LineTotal,
+						cd.CalculatedDifference,
+						CASE
+							WHEN ABS(cd.CalculatedDifference) > 0.01 THEN 1
+							ELSE 0
+						END AS HasDifference
+					FROM Sales.SalesOrderDetail sod
+						CROSS APPLY(SELECT sod.OrderQty * sod.UnitPrice AS ListPrice) lp
+						CROSS APPLY(SELECT lp.ListPrice * (1 - sod.UnitPriceDiscount) AS CalculatedLineTotal) c
+						CROSS APPLY(SELECT c.CalculatedLineTotal - sod.LineTotal AS CalculatedDifference) cd
+					WHERE sod.UnitPriceDiscount > 0;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+					<h3>Lessons Learned</h3>
+					
+					<p>Use the <code>APPLY</code> operator to remove repetition from calculations.</p>
+				</section>
+
+				<section data-background-image="presentation/assets/background/wrapping-paper.jpg" data-background-opacity="0.2">
+					<h3>Wrapping Up</h3>
+					
+					<p>The <code>APPLY</code> operator excels at a few activities:</p>
+					<ul>
+						<li>Pre-aggregating data</li>
+						<li>Getting subsets of child records for each parent record</li>
+						<li>Simplifying calculations without losing performance</li>
+						<li>Splitting strings</li>
+					</ul>
+					
+					<p>This is not a cure-all operator, though.  Be sure to try writing your code a few different ways to see what performs best.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/wrapping-paper.jpg" data-background-opacity="0.2">
+					<h3>Wrapping Up</h3>
+					
+					<p>
+						To learn more, go here:
+						<br />
+						<a href="https://csmore.info/on/apply">https://csmore.info/on/apply</a>
+					</p>
+					<br />
+					<p>
+						And for help, contact me:
+						<br />
+						<a href="mailto:feasel@catallaxyservices.com">feasel@catallaxyservices.com</a> | <a href="https://www.twitter.com/feaselkl">@feaselkl</a>
+					</p>
+					<br />
+					<p>
+						Catallaxy Services consulting:
+						<br />
+						<a href="https://csmore.info/contact">https://CSmore.info/on/contact</a>
+					</p>
+				</section>
+			</div>
+		</div>
+
+		<script src="../reveal.js/dist/reveal.js"></script>
+		<script src="../reveal.js/plugin/zoom/zoom.js"></script>
+		<script src="../reveal.js/plugin/notes/notes.js"></script>
+		<script src="../reveal.js/plugin/search/search.js"></script>
+		<script src="../reveal.js/plugin/markdown/markdown.js"></script>
+		<script src="../reveal.js/plugin/math/math.js"></script>
+		<script src="../reveal.js/plugin/menu/menu.js"></script>
+		<script src="../reveal.js/plugin/highlight/highlight.js"></script>
+		<script src="../reveal.js/plugin/chart/Chart.min.js"></script>
+		<script src="../reveal.js/plugin/chart/plugin.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				width: '70%',
+				controls: true,
+				progress: true,
+				center: true,
+				hash: true,
+				transition: 'fade',
+				
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath, RevealMenu, RevealChart ]
+			});
+		</script>
+	</body>
+</html>
