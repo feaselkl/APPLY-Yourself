@@ -52,7 +52,7 @@
 					</div>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/traffic.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/traffic.jpg" data-background-opacity="0.2">
 					<h3>The APPLY Operator</h3>
 					
 					<p>At its simplest, <code>APPLY</code> is similar to <code>JOIN</code> but allows for a dependency between the data sets being merged together.</p>
@@ -60,7 +60,7 @@
 					<p>Microsoft introduced the <code>APPLY</code> operator in SQL Server 2005, with two variants:  <code>CROSS APPLY</code> and <code>OUTER APPLY</code>.  <code>CROSS APPLY</code> is semantically similar to <code>INNER JOIN</code>, whereas <code>OUTER APPLY</code> is akin to <code>OUTER JOIN</code>.</p>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/motivation.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/motivation.jpg" data-background-opacity="0.2">
 					<h3>Motivation</h3>
 					
 					<blockquote cite="https://twitter.com/AdamMachanic/status/46265020090294272#">
@@ -82,7 +82,7 @@
 					</ol>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/connections.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/connections.jpg" data-background-opacity="0.2">
 					<h3>Getting Session Info</h3>
 					
 					<p>We can use <code>sys.dm_exec_connections</code> to get basic information for each session, but this doesn't give us query text.  There is a table-valued function named <code>sys.dm_exec_sql_text([handle] varbinary)</code> but we need to pass in the handle for each row in our connections DMV.</p>
@@ -115,7 +115,7 @@
 					<h3>Demo Time</h3>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.2">
 					<h3>Lessons Learned</h3>
 					
 					<ul>
@@ -136,7 +136,7 @@
 					</ol>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/water-bottle.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/water-bottle.jpg" data-background-opacity="0.2">
 					<h3>The Problem Description</h3>
 					
 					<p>We want to figure out how many times somebody has ordered a water bottle from the Adventure Works store.  We'd also like to see which product category and subcategory this belongs to.</p>
@@ -201,7 +201,7 @@
 					<h3>Demo Time</h3>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.2">
 					<h3>Lessons Learned</h3>
 					
 					<ul>
@@ -223,13 +223,13 @@
 					</ol>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/cash-register.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/cash-register.jpg" data-background-opacity="0.2">
 					<h3>The Problem Description</h3>
 					
 					<p>We want to see each customer's latest order, PO numbers associated with those orders, and the total due on each order.</p>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/choices.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/choices.jpg" data-background-opacity="0.2">
 					<p>There are three set-based options that we can use to perform this operation:</p>
 					
 					<ul>
@@ -245,7 +245,7 @@
 					<h3>Demo Time</h3>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.2">
 					<h3>Lessons Learned</h3>
 					
 					<ul>
@@ -269,7 +269,7 @@
 					</ol>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/cash-register.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/cash-register.jpg" data-background-opacity="0.2">
 					<h3>The Problem Description</h3>
 					
 					<p>This is a generalization of the "specific child record" problem.</p>
@@ -277,7 +277,7 @@
 					<p>We want to see the average, minimum, maximum, and total prices of each customer's last 5 orders.</p>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/choices.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/choices.jpg" data-background-opacity="0.2">
 					<p>There are still three set-based options that we can use to perform this operation:</p>
 					
 					<ul>
@@ -293,7 +293,7 @@
 					<h3>Demo Time</h3>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.2">
 					<h3>Lessons Learned</h3>
 					
 					<p>Similar to the specific case, the <code>APPLY</code> version looks worse early on but scales <strong>much</strong> better.</p>
@@ -301,7 +301,7 @@
 					<p>Use either for small problem sets, but shift to <code>APPLY</code> as the sets get larger.</p>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/spiral-staircase.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/spiral-staircase.jpg" data-background-opacity="0.2">
 					<h3>When is <code>APPLY</code> More Efficient?</h3>
 					
 					<p><strong>NOT ALWAYS!</strong></p>
@@ -309,7 +309,7 @@
 					<p><code>APPLY</code> runs once for each element in the "parent" (or left-hand) side.  Because each iteration is unique, you typically want to see <code>APPLY</code> generate nested loop joins.</p>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/jump.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/jump.jpg" data-background-opacity="0.2">
 					<h3><code>APPLY</code> and Efficiency</h3>
 					
 					<p>The ideal scenario for <code>APPLY</code> has:</p>
@@ -335,7 +335,7 @@
 					<img src="presentation/assets/image/IndexEfficiency.png" />
 				</section>
 				
-				<section data-background-image="presentation/assets/background/surfer-crash.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/surfer-crash.jpg" data-background-opacity="0.2">
 					<p>The <code>APPLY</code> operator will consequently perform poorly when:</p>
 					
 					<ul>
@@ -359,7 +359,7 @@
 					</ol>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/calculator.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/calculator.jpg" data-background-opacity="0.2">
 					<h3>Simplify Calculations</h3>
 					
 					<p>SQL Server calculations tend to be repetitious.  The <code>APPLY</code> operator can help us with that by feeding the columns from an earlier table or derived function into a later derived function.  In other words, named columns you create in one <code>APPLY</code> statement can be used in the next <code>APPLY</code> statement.</p>
@@ -408,7 +408,7 @@
 					<h3>Demo Time</h3>
 				</section>
 				
-				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.4">
+				<section data-background-image="presentation/assets/background/table-with-chalkboard.jpg" data-background-opacity="0.2">
 					<h3>Lessons Learned</h3>
 					
 					<p>Use the <code>APPLY</code> operator to remove repetition from calculations.</p>
