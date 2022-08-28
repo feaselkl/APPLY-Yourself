@@ -96,7 +96,7 @@ FROM
 	INNER JOIN Person.Person pp ON sc.PersonID = pp.BusinessEntityID
 	OUTER APPLY
 	(
-		SELECT TOP 1
+		SELECT TOP(1)
 			soh.CustomerID,
 			soh.PurchaseOrderNumber,
 			soh.OrderDate,

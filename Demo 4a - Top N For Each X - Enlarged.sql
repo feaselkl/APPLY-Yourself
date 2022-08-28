@@ -62,9 +62,9 @@ SELECT
 FROM
 	Sales.Customer sc
 	INNER JOIN Person.Person pp ON sc.PersonID = pp.BusinessEntityID
-	OUTER APPLY
+	CROSS APPLY
 	(
-		SELECT TOP 5
+		SELECT TOP(5)
 			soh.CustomerID,
 			soh.TotalDue
 		FROM
